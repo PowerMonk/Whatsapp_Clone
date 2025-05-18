@@ -27,7 +27,8 @@
             android:layout_height="match_parent"
             android:padding="8dp"
             android:clipToPadding="false"
-            tools:listitem="@layout/item_chat"/>
+            tools:listitem="@layout/item_chat"
+            android:importantForAccessibility="no"/>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/floating_action_button"
