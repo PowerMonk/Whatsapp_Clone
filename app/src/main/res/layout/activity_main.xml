@@ -13,7 +13,7 @@
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="IP del servidor (Dejar vacío si eres servidor)"
+        android:hint="IP del servidor"
         app:boxStrokeColor="@color/colorPrimary"
         app:boxBackgroundMode="outline"
         android:layout_marginBottom="16dp"
