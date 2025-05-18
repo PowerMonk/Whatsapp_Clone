@@ -1,6 +1,9 @@
 package com.lccm.practicaapp7;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,5 +23,16 @@ public class nuevo_chat extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+    }
+
+    public void onContactoClick(View view) {
+        if (view instanceof TextView) {
+            TextView contacto = (TextView) view;
+            String numero = contacto.getText().toString();
+
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("NOMBRE_CONTACTO", numero);
+            startActivity(intent);
+        }
     }
 }

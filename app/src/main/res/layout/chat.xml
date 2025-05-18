@@ -10,20 +10,20 @@
 
 
     <!-- Barra superior con el nombre del chat -->
+
+
+    <!-- Lista de mensajes -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/topAppBar"
         style="@style/Widget.Material3.Toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        android:title="Chat: 452 229 17 94"
-        app:titleTextColor="@color/white"
+        android:background="#128c7e "
         android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
+        android:title="Chat: 452 229 17 94"
         app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
-        />
+        app:titleTextColor="@color/white" />
 
-
-    <!-- Lista de mensajes -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewMessages"
         android:layout_width="match_parent"
@@ -49,7 +49,7 @@
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             app:boxBackgroundMode="outline"
-            app:boxStrokeColor="?attr/colorPrimary">
+            app:boxStrokeColor="#128c7e">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editTextMessageInput"
@@ -64,12 +64,13 @@
         <!-- Botón para enviar el mensaje -->
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/buttonSendMessage"
+            android:onClick="onEnviarMensajeClick"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@android:drawable/ic_menu_send"
             android:contentDescription="Enviar"
             app:tint="?attr/colorOnPrimary"
-            app:backgroundTint="?attr/colorPrimary"
+            app:backgroundTint="#128c7e "
             android:layout_gravity="center_vertical" />
     </LinearLayout>
 </LinearLayout>

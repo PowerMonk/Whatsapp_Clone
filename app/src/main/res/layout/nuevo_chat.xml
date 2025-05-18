@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#075E54"
+        android:background="#128c7e "
         android:gravity="center"
         android:padding="15dp"
         android:text="Nuevo Chat"
@@ -26,6 +26,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
+
 
             <!-- Espacio para un título visual -->
 
@@ -49,6 +50,7 @@
 
                 <TextView
                     android:id="@+id/contact1"
+                    android:onClick="onContactoClick"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="1dp"
@@ -62,6 +64,7 @@
 
                 <TextView
                     android:id="@+id/contact2"
+                    android:onClick="onContactoClick"
                     android:layout_width="match_parent"
                     android:layout_height="65dp"
                     android:layout_marginBottom="1dp"
