@@ -54,14 +54,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         txtIP = findViewById(R.id.txtIP);
-       // txtMensaje = findViewById(R.id.txtMensaje);
-        //tvMessageLog = findViewById(R.id.tvMessageLog);
-        //Button btnStartServer = findViewById(R.id.btnStartServer);
         Button btnConnect = findViewById(R.id.btnConectar);
-        //Button btnSendMessage = findViewById(R.id.btnEnviarMensaje);
-        //btnStartServer.setOnClickListener(v -> startServer());
         btnConnect.setOnClickListener(v -> connectToServer());
-        //btnSendMessage.setOnClickListener(v -> sendMessage(txtMensaje.getText().toString()));
 
 // Solicitar permiso para leer el número de teléfono
         requestPhoneNumberPermission();
@@ -126,6 +120,10 @@ public class MainActivity extends AppCompatActivity {
     private void connectToServer(){
         String ip = txtIP.getText().toString();
 
+        // Pasar a la pantalla de contactos
+        Intent intent = new Intent(MainActivity.this, contact_list.class);
+        startActivity(intent);
+
         if(ip.isEmpty()){
             Toast.makeText(this, "Por favor ingrese una dirección IP", Toast.LENGTH_SHORT).show();
             return;
@@ -139,8 +137,6 @@ public class MainActivity extends AppCompatActivity {
                 sendMessage("REG:" + phoneNumber);
                 isServerRunning = true;
                 runOnUiThread(() -> Toast.makeText(this, "Conectado al servidor", Toast.LENGTH_SHORT).show());
-                Intent intent = new Intent(MainActivity.this, contact_list.class);
-                startActivity(intent);
 
             } catch (IOException e) {
                 e.printStackTrace();
