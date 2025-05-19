@@ -18,9 +18,10 @@
         style="@style/Widget.Material3.Toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#128c7e "
+        android:background="#128c7e"
+        app:title="Chat: 452 229 17 94"
+        app:titleTextColor="@color/white"
         android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
-        android:title="Chat: 452 229 17 94"
         app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
         app:titleTextColor="@color/white" />
 
