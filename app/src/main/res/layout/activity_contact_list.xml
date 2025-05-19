@@ -13,12 +13,12 @@
         style="@style/Widget.Material3.Toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
-        app:title="Chats"
-        app:titleTextColor="@color/white"
-        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
-
-        />
+        android:text="Chats"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:background="#128c7e "
+        android:textColor="#FFFFFF"
+        android:padding="15dp"/>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
@@ -36,6 +36,7 @@
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/floating_action_button"
             style="?attr/floatingActionButtonStyle"
+            android:onClick="onNuevoChatClick"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|end"

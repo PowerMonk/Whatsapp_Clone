@@ -5,10 +5,24 @@
     android:id="@+id/new_chat_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+
     android:background="#FFFFFF"
     tools:context=".nuevo_chat">
 
     <LinearLayout
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#128c7e "
+        android:gravity="center"
+        android:padding="15dp"
+        android:text="Nuevo Chat"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+    <!-- Contenedor desplazable -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -18,6 +32,7 @@
             style="@style/Widget.Material3.Toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+
             android:background="?attr/colorPrimary"
             app:title="Nuevo Chat"
             app:titleTextColor="@color/white"
@@ -53,5 +68,7 @@
             android:clipToPadding="false"
             tools:listitem="@layout/item_nuevo_chat" />
     </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

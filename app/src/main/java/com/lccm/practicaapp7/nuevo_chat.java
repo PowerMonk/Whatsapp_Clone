@@ -1,9 +1,13 @@
 // nuevochat.java
 package com.lccm.practicaapp7;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
+import android.widget.TextView;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -55,3 +59,16 @@ public class nuevo_chat extends AppCompatActivity {
         });
     }
 }
+
+    public void onContactoClick(View view) {
+        if (view instanceof TextView) {
+            TextView contacto = (TextView) view;
+            String numero = contacto.getText().toString();
+
+            Intent intent = new Intent(this, ChatActivity.class);
+            intent.putExtra("NOMBRE_CONTACTO", numero);
+            startActivity(intent);
+        }
+    }
+}
+

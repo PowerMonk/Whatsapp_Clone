@@ -2,6 +2,7 @@ package com.lccm.practicaapp7;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -64,6 +65,11 @@ public class contact_list extends AppCompatActivity implements ChatAdapter.OnCha
 
     private void goToNewChatScreen() {
         Intent intent = new Intent(contact_list.this, nuevo_chat.class);
+        startActivity(intent);
+    }
+
+    public void onNuevoChatClick(View view) {
+        Intent intent = new Intent(this, nuevo_chat.class);
         startActivity(intent);
     }
 }
