@@ -58,8 +58,6 @@ public class nuevo_chat extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         });
     }
-}
-
     public void onContactoClick(View view) {
         if (view instanceof TextView) {
             TextView contacto = (TextView) view;
@@ -71,4 +69,5 @@ public class nuevo_chat extends AppCompatActivity {
         }
     }
 }
+
 

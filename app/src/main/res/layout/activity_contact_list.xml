@@ -13,12 +13,11 @@
         style="@style/Widget.Material3.Toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Chats"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:background="#128c7e "
-        android:textColor="#FFFFFF"
-        android:padding="15dp"/>
+        android:background="#128c7e"
+        android:padding="15dp"
+        app:title="Chats"
+        app:titleTextColor="#FFFFFF"
+        app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge"/>
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"

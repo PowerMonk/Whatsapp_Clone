@@ -10,4 +10,6 @@
     android:textStyle="bold"
     android:gravity="start"
     android:layout_marginBottom="1dp"
-    android:backgroundTint="#EEEEEE" />
+    android:backgroundTint="#EEEEEE"
+    android:onClick="onContactoClick"
+    />
