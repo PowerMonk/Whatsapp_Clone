@@ -6,12 +6,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.telephony.TelephonyManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -22,26 +20,12 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-
 public class MainActivity extends AppCompatActivity {
 
-    EditText txtIP, txtMensaje;
-    TextView tvMessageLog;
-    ServerSocket serverSocket;
-    Socket socket;
-    BufferedWriter writer;
-    boolean isServerRunning = true;
-    Handler handler = new Handler();
-    private String phoneNumber = "";
+    private EditText txtIP;
+    private String phoneNumber;
     private static final int REQUEST_READ_PHONE_STATE = 1;
-
+    private SocketManager socketManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,12 +42,12 @@ public class MainActivity extends AppCompatActivity {
         Button btnConnect = findViewById(R.id.btnConectar);
         btnConnect.setOnClickListener(v -> connectToServer());
 
-// Solicitar permiso para leer el número de teléfono
+        // Solicitar permiso para leer el número de teléfono
         requestPhoneNumberPermission();
 
-//        Crear hilo para recibir mensajes
-//        new Thread(this::listeningForMessages).start();
-
+        // Inicializar el singleton SocketManager
+        socketManager = SocketManager.getInstance();
+        initSocketManager();
     }
 
     private void requestPhoneNumberPermission() {
@@ -89,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // El usuario ha concedido el permiso, así que obtenemos el número
                 getPhoneNumber();
+
             } else {
                 // El usuario ha denegado el permiso
                 Toast.makeText(this, "Permiso denegado para leer el número de teléfono", Toast.LENGTH_SHORT).show();
@@ -112,80 +97,32 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "Permiso para leer el número de teléfono no concedido.", Toast.LENGTH_SHORT).show();
         }
-        phoneNumber = "No disponible";
+//        initSocketManager();
+        phoneNumber = "5556667777";
         Toast.makeText(this, "Número de teléfono: " + phoneNumber, Toast.LENGTH_LONG).show();
     }
 
-    //      Método para conectarse al servidor
     // 192.168.1.153
-    private void connectToServer(){
+    private void initSocketManager() {
+        socketManager.init(getApplicationContext(), phoneNumber);
+    }
+
+    private void connectToServer() {
         String ip = txtIP.getText().toString();
 
-        // Pasar a la pantalla de contactos
-        Intent intent = new Intent(MainActivity.this, contact_list.class);
-        startActivity(intent);
-
-        if(ip.isEmpty()){
+        if (ip.isEmpty()) {
             Toast.makeText(this, "Por favor ingrese una dirección IP", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        new Thread(() -> {
+        if (socketManager.connectToServer(ip, 5000)) {
+            Toast.makeText(this, "Conectando al servidor...", Toast.LENGTH_SHORT).show();
 
-            try{
-                socket = new Socket(ip, 5000);
-                writer = new BufferedWriter( new OutputStreamWriter(socket.getOutputStream()));
-                sendMessage("REG:" + phoneNumber);
-                isServerRunning = true;
-                runOnUiThread(() -> Toast.makeText(this, "Conectado al servidor", Toast.LENGTH_SHORT).show());
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                runOnUiThread(
-                        () -> Toast.makeText(this, "Error al conectarse al servidor", Toast.LENGTH_SHORT).show()
-                );
-            }
-
-        }).start();
-
-    }
-
-    //    Método para enviar mensajes
-    private void sendMessage(String message){
-        if(writer == null || message.isEmpty())
-            return;
-
-        new Thread(() -> {
-            try{
-
-                writer.write(message+"\n");
-                writer.flush();
-//                runOnUiThread(() -> {
-//                    tvMessageLog.append("Yo > " + message +"\n");
-//                });
-//                txtMensaje.setText("");
-
-            }catch (IOException e){
-                e.printStackTrace();
-                runOnUiThread(() -> Toast.makeText(this, "Error al enviar el mensaje", Toast.LENGTH_SHORT).show());
-            }
-        }).start();
-    }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        isServerRunning = false;
-        try {
-            if (serverSocket != null)
-                serverSocket.close();
-
-            if (socket != null)
-                socket.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
+            // Pasar a la pantalla de contactos
+            Intent intent = new Intent(MainActivity.this, contact_list.class);
+            startActivity(intent);
+        } else {
+            Toast.makeText(this, "Error al conectarse al servidor", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -193,4 +130,8 @@ public class MainActivity extends AppCompatActivity {
         connectToServer();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 }

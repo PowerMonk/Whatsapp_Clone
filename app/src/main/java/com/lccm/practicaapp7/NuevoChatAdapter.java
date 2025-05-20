@@ -1,5 +1,7 @@
 package com.lccm.practicaapp7;
 
+import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +17,7 @@ public class NuevoChatAdapter extends RecyclerView.Adapter<NuevoChatAdapter.View
 
     private List<String> numerosOriginales;
     private List<String> numerosFiltrados;
+    private Context context;
 
     public NuevoChatAdapter(List<String> numeros) {
         this.numerosOriginales = new ArrayList<>(numeros);
@@ -24,13 +27,22 @@ public class NuevoChatAdapter extends RecyclerView.Adapter<NuevoChatAdapter.View
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_nuevo_chat, parent, false);
+        context = parent.getContext();
+        View view = LayoutInflater.from(context).inflate(R.layout.item_nuevo_chat, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.numeroTextView.setText(numerosFiltrados.get(position));
+        String numero = numerosFiltrados.get(position);
+        holder.numeroTextView.setText(numero);
+
+        // Configurar el clic en cada elemento
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, ChatActivity.class);
+            intent.putExtra("NOMBRE_CONTACTO", numero);
+            context.startActivity(intent);
+        });
     }
 
     @Override
