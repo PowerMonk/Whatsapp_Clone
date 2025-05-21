@@ -50,6 +50,11 @@ public class NuevoChatAdapter extends RecyclerView.Adapter<NuevoChatAdapter.View
         return numerosFiltrados.size();
     }
 
+    public void setListaCompleta(List<String> nuevaLista) {
+        this.numerosOriginales = nuevaLista;
+        this.numerosFiltrados = new ArrayList<>(nuevaLista);
+    }
+
     public void filtrar(String texto) {
         numerosFiltrados.clear();
         if (texto.isEmpty()) {

@@ -17,12 +17,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends AppCompatActivity implements SocketManager.MessageListener {
 
     private List<Message> listaMensajes;
     private MessageAdapter adapter;
     private RecyclerView recyclerView;
     private EditText editText;
+    private String nombreContacto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,52 +34,95 @@ public class ChatActivity extends AppCompatActivity {
         // Inicialización de views para mensajes
         recyclerView = findViewById(R.id.recyclerViewMessages);
         editText = findViewById(R.id.editTextMessageInput);
+
+        // Crear lista y adaptador vacíos inicialmente
         listaMensajes = new ArrayList<>();
         adapter = new MessageAdapter(listaMensajes);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
         // Obtener el nombre del contacto del intent
-        String nombreContacto = getIntent().getStringExtra("NOMBRE_CONTACTO");
+        nombreContacto = getIntent().getStringExtra("NOMBRE_CONTACTO");
 
         // Configurar el título con el nombre del contacto
         com.google.android.material.appbar.MaterialToolbar toolbar = findViewById(R.id.topAppBar);
         if (nombreContacto != null && !nombreContacto.isEmpty()) {
             toolbar.setTitle("Chat: " + nombreContacto);
+
+            // Cargar historial de mensajes si existe
+            cargarHistorialMensajes();
         }
+
         toolbar.setNavigationOnClickListener(v -> {
             finish(); // Esto cierra la pantalla actual y vuelve a la anterior
         });
 
+        // Registrar como listener para recibir mensajes nuevos
+        SocketManager.getInstance().registerListener(this);
+
         // Manejar insets correctamente para que el layout_chatbox se ajuste cuando el teclado está visible
-        View rootView = findViewById(R.id.ChatView);
-        View chatboxLayout = findViewById(R.id.layout_chatbox);
+        // [Código existente para insets]
+    }
 
-        ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+    private void cargarHistorialMensajes() {
+        // Limpiar lista actual
+        listaMensajes.clear();
 
-            // Aplicar insets del sistema a toda la vista
-            rootView.setPadding(systemBars.left, systemBars.top, systemBars.right,
-                    ime.bottom > 0 ? 0 : systemBars.bottom);
+        // Obtener historial para este contacto
+        List<Message> historial = SocketManager.getInstance().getChatHistory(nombreContacto);
 
-            // Ajustar espacio entre el campo de texto y el borde inferior cuando el teclado está visible
-            chatboxLayout.setTranslationY(-ime.bottom);
+        // Agregar todos los mensajes del historial
+        if (historial != null && !historial.isEmpty()) {
+            listaMensajes.addAll(historial);
+            adapter.notifyDataSetChanged();
 
-            return WindowInsetsCompat.CONSUMED;
-        });
+            // Hacer scroll al último mensaje
+            recyclerView.post(() -> {
+                recyclerView.scrollToPosition(listaMensajes.size() - 1);
+            });
+        }
     }
 
     public void onEnviarMensajeClick(View view) {
         String mensaje = editText.getText().toString().trim();
 
-        if (!mensaje.isEmpty()) {
+        if (!mensaje.isEmpty() && nombreContacto != null) {
+            // Crear un nuevo mensaje local
             Message nuevoMensaje = new Message(mensaje, true);
             listaMensajes.add(nuevoMensaje);
             adapter.notifyItemInserted(listaMensajes.size() - 1);
             recyclerView.scrollToPosition(listaMensajes.size() - 1);
+
+            // Enviar mensaje al servidor para reenvío al destinatario
+            SocketManager.getInstance().sendMessage(nombreContacto, mensaje);
+
+            // Limpiar campo de texto
             editText.setText("");
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        SocketManager.getInstance().unregisterListener(this);
+    }
+
+    // Implementación de la interfaz MessageListener
+    @Override
+    public void onMessageReceived(String from, String message) {
+        // Actualizar la lista si recibimos un mensaje nuevo del contacto actual
+        if (from.equals(nombreContacto)) {
+            runOnUiThread(this::cargarHistorialMensajes);
+        }
+    }
+
+    @Override
+    public void onConnectionStatusChanged(boolean connected) {
+        // Opcional: mostrar estado de conexión
+    }
+
+    @Override
+    public void onAvailableNumbersUpdated(List<String> numbers) {
+        // No es relevante para esta actividad
+    }
 }

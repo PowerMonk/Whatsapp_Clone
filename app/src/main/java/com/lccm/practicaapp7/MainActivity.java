@@ -20,6 +20,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.Random;
+
 public class MainActivity extends AppCompatActivity {
 
     private EditText txtIP;
@@ -41,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         txtIP = findViewById(R.id.txtIP);
         Button btnConnect = findViewById(R.id.btnConectar);
         btnConnect.setOnClickListener(v -> connectToServer());
+
 
         // Solicitar permiso para leer el número de teléfono
         requestPhoneNumberPermission();
@@ -95,11 +98,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         } else {
-            Toast.makeText(this, "Permiso para leer el número de teléfono no concedido.", Toast.LENGTH_SHORT).show();
+            // Generar un número aleatorio como respaldo
+            phoneNumber = generateRandomPhoneNumber();
+            Toast.makeText(this, "Número generado" + phoneNumber, Toast.LENGTH_SHORT).show();
         }
-//        initSocketManager();
-        phoneNumber = "5556667777";
-        Toast.makeText(this, "Número de teléfono: " + phoneNumber, Toast.LENGTH_LONG).show();
+
+        // Generar un número aleatorio como respaldo
+        phoneNumber = generateRandomPhoneNumber();
+        Toast.makeText(this, "Número de teléfono generado: " + phoneNumber, Toast.LENGTH_LONG).show();
     }
 
     // 192.168.1.153
@@ -133,5 +139,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    private String generateRandomPhoneNumber() {
+        Random random = new Random();
+        StringBuilder phoneBuilder = new StringBuilder("+52");
+
+        // Generar 10 dígitos aleatorios para el número
+        for (int i = 0; i < 10; i++) {
+            phoneBuilder.append(random.nextInt(10));
+        }
+
+        String randomNumber = phoneBuilder.toString();
+        Toast.makeText(this, "Número aleatorio generado: " + randomNumber, Toast.LENGTH_SHORT).show();
+        return randomNumber;
     }
 }

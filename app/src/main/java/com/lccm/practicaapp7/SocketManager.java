@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -74,9 +75,11 @@ public class SocketManager {
                 // Mostrar un mensaje en la UI para confirmar la conexión
                 showToastInMainThread("Conexión establecida con " + serverIp + ":" + port);
 
+                phoneNumber = validatePhoneNumber(phoneNumber);
+
                 // Registrarse en el servidor con nuestro número
                 String regMessage = "REG:" + phoneNumber;
-                sendMessage(regMessage);
+                sendMessageToServer(regMessage);
                 Log.d(TAG, "Mensaje de registro enviado: " + regMessage);
 
                 isConnected = true;
@@ -112,6 +115,16 @@ public class SocketManager {
                     // Procesar el mensaje en el hilo principal para evitar problemas de concurrencia
                     mainHandler.post(() -> processIncomingMessage(receivedMessage));
                 }
+
+                // Si salimos del bucle sin excepción y estábamos conectados, es una desconexión silenciosa
+                if (isConnected) {
+                    Log.w(TAG, "Desconexión silenciosa detectada, intentando reconexión...");
+                    isConnected = false;
+                    notifyConnectionStatusChanged(false);
+
+                    // Opcional: Intenta reconectar automáticamente
+                    // reconnectToServer();
+                }
             } catch (IOException e) {
                 Log.e(TAG, "Error al leer mensajes del servidor", e);
                 showToastInMainThread("Error en comunicación: " + e.getMessage());
@@ -122,10 +135,60 @@ public class SocketManager {
     }
 
     private void processIncomingMessage(String message) {
-        Log.d(TAG, "Procesando mensaje: [" + message + "]");
+        Log.d(TAG, "Procesando mensaje: " + message);
 
         try {
-            if (message.startsWith("FROM:")) {
+            // Limpiar el mensaje de posibles caracteres BOM (Byte Order Mark)
+            if (message.length() > 0 && message.charAt(0) == '\uFEFF') {
+                message = message.substring(1);
+                Log.d(TAG, "Se eliminó BOM del mensaje. Mensaje limpio: " + message);
+            }
+
+            if (message.startsWith("NUMEROS_NO_USADOS:")) {
+                // Números no utilizados
+                Log.d(TAG, "Procesando mensaje de números no usados");
+                String numerosStr = message.substring("NUMEROS_NO_USADOS:".length()).trim();
+                Log.d(TAG, "Cadena de números recibida: [" + numerosStr + "]");
+
+                // Limpiar lista actual
+                availableNumbers.clear();
+
+                processAvailableNumbers(numerosStr);
+
+//                if (!numerosStr.isEmpty()) {
+//                    // Añadir los nuevos números
+//                    String[] numerosArray = numerosStr.split(",");
+//                    Log.d(TAG, "Cantidad de números recibidos: " + numerosArray.length);
+//
+//                    for (String numero : numerosArray) {
+//                        if (numero != null && !numero.trim().isEmpty()) {
+//                            String numTrimmed = numero.trim();
+//                            availableNumbers.add(numTrimmed);
+//                            Log.d(TAG, "Número agregado a la lista: [" + numTrimmed + "]");
+//                        }
+//                    }
+//                }
+
+                Log.d(TAG, "Total números disponibles: " + availableNumbers.size());
+                showToastInMainThread("Números disponibles: " + availableNumbers.size());
+
+                // Notificar a los listeners sobre los números disponibles
+                notifyAvailableNumbersUpdated();
+
+            }
+            else if (message.startsWith("MSG:")) {
+                // Formato: MSG:remitente:mensaje
+                String[] parts = message.split(":", 3);
+                if (parts.length >= 3) {
+                    String sender = parts[1];
+                    String content = parts[2];
+                    Log.d(TAG, "Mensaje recibido de " + sender + ": " + content);
+
+                    // Guardar en el historial local
+                    saveMessageToHistory(sender, content, false);
+                }
+            }
+            else if (message.startsWith("FROM:")) {
                 // Mensaje de chat normal
                 Log.d(TAG, "Procesando mensaje de chat");
                 String[] parts = message.split("\\|");
@@ -149,47 +212,21 @@ public class SocketManager {
                     Log.d(TAG, "Mensaje válido - FROM: [" + from + "] TXT: [" + text + "]");
                     saveMessageToHistory(from, text, false);
                     notifyMessageReceived(from, text);
-                } else {
+                }
+                else {
                     Log.w(TAG, "Mensaje con formato incorrecto o campos vacíos");
                 }
-
-            } else if (message.startsWith("NUMEROS_NO_USADOS:")) {
-                // Números no utilizados
-                Log.d(TAG, "Procesando mensaje de números no usados");
-                String numerosStr = message.substring("NUMEROS_NO_USADOS:".length()).trim();
-                Log.d(TAG, "Cadena de números recibida: [" + numerosStr + "]");
-
-                // Limpiar lista actual
-                availableNumbers.clear();
-
-                if (!numerosStr.isEmpty()) {
-                    // Añadir los nuevos números
-                    String[] numerosArray = numerosStr.split(",");
-                    Log.d(TAG, "Cantidad de números recibidos: " + numerosArray.length);
-
-                    for (String numero : numerosArray) {
-                        if (numero != null && !numero.trim().isEmpty()) {
-                            String numTrimmed = numero.trim();
-                            availableNumbers.add(numTrimmed);
-                            Log.d(TAG, "Número agregado a la lista: [" + numTrimmed + "]");
-                        }
-                    }
-                }
-
-                Log.d(TAG, "Total números disponibles: " + availableNumbers.size());
-                showToastInMainThread("Números disponibles: " + availableNumbers.size());
-
-                // Notificar a los listeners sobre los números disponibles
-                notifyAvailableNumbersUpdated();
-
-            } else {
+            }
+            else {
                 Log.d(TAG, "Tipo de mensaje no reconocido: [" + message + "]");
             }
         } catch (Exception e) {
+            e.printStackTrace();
             Log.e(TAG, "Error al procesar mensaje: " + e.getMessage(), e);
             showToastInMainThread("Error al procesar mensaje: " + e.getMessage());
         }
     }
+
 
     private void showToastInMainThread(final String message) {
         mainHandler.post(() ->
@@ -201,7 +238,7 @@ public class SocketManager {
         return new ArrayList<>(availableNumbers);
     }
 
-    private void sendMessage(String message) {
+    private void sendMessageToServer(String message) {
         if (writer == null) {
             Log.e(TAG, "No se puede enviar mensaje, escritor no inicializado");
             return;
@@ -221,7 +258,7 @@ public class SocketManager {
         });
     }
 
-    public void sendChatMessage(String to, String message) {
+    public void sendMessage(String to, String message) {
         if (!isConnected) {
             Log.e(TAG, "No estás conectado al servidor");
             showToastInMainThread("No estás conectado al servidor");
@@ -251,22 +288,60 @@ public class SocketManager {
         });
     }
 
-    private void saveMessageToHistory(String contact, String content, boolean sentByMe) {
-        Message message = new Message(content, sentByMe);
+    private void saveMessageToHistory(String contact, String content, boolean isSent) {
+        mainHandler.post(() -> {
+            if (!chatHistory.containsKey(contact)) {
+                chatHistory.put(contact, new ArrayList<>());
+            }
+            chatHistory.get(contact).add(new Message(content, isSent));
 
-        if (!chatHistory.containsKey(contact)) {
-            chatHistory.put(contact, new ArrayList<>());
-        }
-        chatHistory.get(contact).add(message);
-        Log.d(TAG, "Mensaje guardado en historial - Contacto: [" + contact + "] Enviado por mí: " + sentByMe);
+            // Notificar a los listeners sobre el nuevo mensaje
+            notifyMessageHistoryUpdated(contact);
+        });
     }
 
+    private void notifyMessageHistoryUpdated(String contact) {
+        for (MessageListener listener : messageListeners) {
+            if (listener != null) {
+                listener.onMessageReceived(contact, "");
+            }
+        }
+    }
+
+    public void requestNonUsedNumbers() {
+        if (!isConnected) {
+            Log.e(TAG, "No se pueden solicitar números, no hay conexión");
+            showToastInMainThread("No hay conexión para solicitar números");
+            return;
+        }
+
+        Log.d(TAG, "Solicitando números no usados...");
+        showToastInMainThread("Solicitando números disponibles...");
+
+        executorService.execute(() -> {
+            try {
+                writer.write("OBT\n");
+                writer.flush();
+                Log.d(TAG, "Solicitud de números no usados enviada");
+            } catch (IOException e) {
+                Log.e(TAG, "Error solicitando números no usados", e);
+                showToastInMainThread("Error al solicitar números: " + e.getMessage());
+            }
+        });
+    }
+//    public Map<String, List<Message>> getChatHistory() {
+//        return chatHistory;
+//    }
     @NonNull
     public List<Message> getChatHistory(String contact) {
         if (chatHistory.containsKey(contact)) {
             return chatHistory.get(contact);
         }
         return new ArrayList<>();
+    }
+    public List<String> getAllContactsWithChat() {
+        // Devolver la lista de todos los contactos con historial de chat
+        return new ArrayList<>(chatHistory.keySet());
     }
 
     public void registerListener(MessageListener listener) {
@@ -303,10 +378,88 @@ public class SocketManager {
         });
     }
 
+    private void processAvailableNumbers(String numbersString) {
+        Log.d(TAG, "Cadena de números recibida: [" + numbersString + "]");
+
+        availableNumbers.clear();
+        String[] numbers = numbersString.split(",");
+        Log.d(TAG, "Cantidad de números recibidos: " + numbers.length);
+
+        // Lista temporal para detectar duplicados
+        List<String> processedNumbers = new ArrayList<>();
+
+        Random random = new Random();
+
+        // Agregar solo los números que NO son el número propio
+        for (String number : numbers) {
+            String trimmedNumber = number.trim();
+
+            if (!trimmedNumber.isEmpty() && !trimmedNumber.equals(phoneNumber)) {
+                // Verificar si es un duplicado
+                String uniqueNumber = trimmedNumber;
+                int attempts = 0;
+
+                // Si ya existe este número, añadirle dígitos aleatorios al final
+                while (processedNumbers.contains(uniqueNumber) && attempts < 10) {
+                    // Agregar un sufijo aleatorio de 3 dígitos para diferenciar
+                    int suffix = random.nextInt(900) + 100; // Número entre 100 y 999
+                    uniqueNumber = trimmedNumber + "-" + suffix;
+                    attempts++;
+                    Log.d(TAG, "Número duplicado detectado, creando variante: " + uniqueNumber);
+                }
+
+                processedNumbers.add(uniqueNumber);
+                availableNumbers.add(uniqueNumber);
+                Log.d(TAG, "Número agregado a la lista: [" + uniqueNumber + "]");
+            } else if (trimmedNumber.equals(phoneNumber)) {
+                Log.d(TAG, "Número propio ignorado: [" + trimmedNumber + "]");
+            }
+        }
+
+        Log.d(TAG, "Total números disponibles: " + availableNumbers.size());
+
+        // Notificar a todos los listeners que la lista de números disponibles ha cambiado
+        notifyAvailableNumbersUpdated();
+    }
+
+    private String validatePhoneNumber(String number) {
+        Log.d(TAG, "Validando número de teléfono: " + number);
+
+        // Verificar si el número comienza con +52 y tiene menos de 13 caracteres en total
+        // (prefijo +52 + al menos 10 dígitos = mínimo 13 caracteres)
+        if (number.startsWith("+52") && number.length() < 10) {
+            Log.d(TAG, "Número incompleto detectado (solo prefijo o número corto)");
+
+            // Generar un nuevo número aleatorio con prefijo +52 y 10 dígitos
+            StringBuilder phoneBuilder = new StringBuilder("+52");
+            Random random = new Random();
+
+            // Generar 10 dígitos aleatorios para el número
+            for (int i = 0; i < 10; i++) {
+                phoneBuilder.append(random.nextInt(10));
+            }
+
+            String validNumber = phoneBuilder.toString();
+            Log.d(TAG, "Número generado aleatoriamente: " + validNumber);
+            return validNumber;
+        }
+
+        // Si el número no tiene prefijo +52, agrégalo
+        if (!number.startsWith("+52")) {
+            Log.d(TAG, "Agregando prefijo +52 al número");
+            number = "+52" + number;
+        }
+
+        // Si el número ya es válido, devolverlo tal cual
+        return number;
+    }
+
     private void notifyAvailableNumbersUpdated() {
         mainHandler.post(() -> {
             for (MessageListener listener : messageListeners) {
-                listener.onAvailableNumbersUpdated(new ArrayList<>(availableNumbers));
+                if (listener != null) {
+                    listener.onAvailableNumbersUpdated(getAvailableNumbers());
+                }
             }
         });
     }
@@ -338,25 +491,4 @@ public class SocketManager {
         });
     }
 
-    public void requestNonUsedNumbers() {
-        if (!isConnected) {
-            Log.e(TAG, "No se pueden solicitar números, no hay conexión");
-            showToastInMainThread("No hay conexión para solicitar números");
-            return;
-        }
-
-        Log.d(TAG, "Solicitando números no usados...");
-        showToastInMainThread("Solicitando números disponibles...");
-
-        executorService.execute(() -> {
-            try {
-                writer.write("OBT\n");
-                writer.flush();
-                Log.d(TAG, "Solicitud de números no usados enviada");
-            } catch (IOException e) {
-                Log.e(TAG, "Error solicitando números no usados", e);
-                showToastInMainThread("Error al solicitar números: " + e.getMessage());
-            }
-        });
-    }
 }

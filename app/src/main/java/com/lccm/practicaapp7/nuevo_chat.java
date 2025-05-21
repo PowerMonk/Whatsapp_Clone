@@ -16,12 +16,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class nuevo_chat extends AppCompatActivity {
+public class nuevo_chat extends AppCompatActivity implements SocketManager.MessageListener {
 
     private TextInputEditText inputBusqueda;
     private RecyclerView recyclerView;
     private NuevoChatAdapter adapter;
-    private List<String> listaNumeros;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,19 +36,15 @@ public class nuevo_chat extends AppCompatActivity {
         recyclerView = findViewById(R.id.recycler_view_numeros);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        listaNumeros = new ArrayList<>();
-
-        SocketManager.getInstance().requestNonUsedNumbers();
-
-        listaNumeros = Arrays.asList(
-                "452 229 17 94",
-                "452 166 50 55"
-        );
-
+        // Inicializar el adaptador con la lista actual (podría estar vacía)
         adapter = new NuevoChatAdapter(new ArrayList<>(SocketManager.getInstance().getAvailableNumbers()));
         recyclerView.setAdapter(adapter);
 
+        // Registrar listener para actualizaciones
+        SocketManager.getInstance().registerListener(this);
+
         // Solicitar números no usados al servidor
+        SocketManager.getInstance().requestNonUsedNumbers();
 
         inputBusqueda.addTextChangedListener(new TextWatcher() {
             @Override
@@ -60,6 +55,33 @@ public class nuevo_chat extends AppCompatActivity {
             }
             @Override
             public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Es importante desregistrar el listener para evitar memory leaks
+        SocketManager.getInstance().unregisterListener(this);
+    }
+
+    // Implementación de MessageListener
+    @Override
+    public void onMessageReceived(String from, String message) {
+        // No necesitamos hacer nada aquí para esta actividad
+    }
+
+    @Override
+    public void onConnectionStatusChanged(boolean connected) {
+        // Opcional: mostrar un mensaje si la conexión se pierde
+    }
+
+    @Override
+    public void onAvailableNumbersUpdated(List<String> numbers) {
+        // Esto es clave: actualizar el adaptador cuando se reciben nuevos números
+        runOnUiThread(() -> {
+            adapter.setListaCompleta(new ArrayList<>(numbers));
+            adapter.notifyDataSetChanged();
         });
     }
 }
