@@ -8,15 +8,16 @@
     android:paddingStart="8dp"
     android:paddingEnd="64dp">
 
+<!--    <TextView-->
+<!--        android:id="@+id/textViewSenderReceived"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:textSize="12sp"-->
+<!--        android:textStyle="bold"-->
+<!--        android:layout_gravity="start"-->
+<!--        android:layout_marginBottom="2dp"-->
+<!--        android:text="452 157 95 95" /> -->
     <TextView
-        android:id="@+id/textViewSenderReceived"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        android:layout_gravity="start"
-        android:layout_marginBottom="2dp"
-        android:text="452 157 95 95" /> <TextView
     android:id="@+id/textViewMessageContentReceived"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"

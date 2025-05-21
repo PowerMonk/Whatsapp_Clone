@@ -388,13 +388,23 @@ public class SocketManager {
         // Lista temporal para detectar duplicados
         List<String> processedNumbers = new ArrayList<>();
 
+        // Obtener la lista de contactos con los que ya tenemos chat
+        List<String> contactsWithChat = new ArrayList<>(chatHistory.keySet());
+        Log.d(TAG, "Contactos con chat existente: " + contactsWithChat.size());
+
         Random random = new Random();
 
-        // Agregar solo los números que NO son el número propio
+        // Agregar solo los números que NO son el número propio y NO tienen chat existente
         for (String number : numbers) {
             String trimmedNumber = number.trim();
 
             if (!trimmedNumber.isEmpty() && !trimmedNumber.equals(phoneNumber)) {
+                // Verificar si ya existe un chat con este número
+                if (contactsWithChat.contains(trimmedNumber)) {
+                    Log.d(TAG, "Número omitido por tener chat existente: [" + trimmedNumber + "]");
+                    continue; // Saltar al siguiente número
+                }
+
                 // Verificar si es un duplicado
                 String uniqueNumber = trimmedNumber;
                 int attempts = 0;
@@ -416,7 +426,7 @@ public class SocketManager {
             }
         }
 
-        Log.d(TAG, "Total números disponibles: " + availableNumbers.size());
+        Log.d(TAG, "Total números disponibles (filtrados): " + availableNumbers.size());
 
         // Notificar a todos los listeners que la lista de números disponibles ha cambiado
         notifyAvailableNumbersUpdated();
